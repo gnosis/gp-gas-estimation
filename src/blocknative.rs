@@ -29,6 +29,7 @@ struct EstimatedPrice {
 #[serde(rename_all = "camelCase")]
 struct BlockPrice {
     estimated_prices: Vec<EstimatedPrice>,
+    base_fee_per_gas: f64,
 }
 
 #[derive(Debug, serde::Deserialize, Clone, Default)]
@@ -210,6 +211,7 @@ fn estimate_with_limits(
                     time_limit.as_secs_f64(),
                     max_priority_fee_per_gas_points.as_slice().try_into()?,
                 ),
+                base_fee_per_gas: block.base_fee_per_gas,
             }),
         });
     }
@@ -283,7 +285,7 @@ mod tests {
           "blockPrices": [
             {
               "blockNumber": "13005096",
-              "baseFeePerGas": "94.647990462",
+              "baseFeePerGas": 94.647990462,
               "estimatedTransactionCount": "137",
               "estimatedPrices": [
                 {
@@ -333,7 +335,8 @@ mod tests {
                 legacy: 104.0,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 199.16,
-                    max_priority_fee_per_gas: 9.86
+                    max_priority_fee_per_gas: 9.86,
+                    base_fee_per_gas: 94.647990462,
                 })
             }
         );
@@ -344,7 +347,8 @@ mod tests {
                 legacy: 98.76,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 194.134,
-                    max_priority_fee_per_gas: 4.844000000000001
+                    max_priority_fee_per_gas: 4.844000000000001,
+                    base_fee_per_gas: 94.647990462,
                 })
             }
         );
@@ -355,7 +359,8 @@ mod tests {
                 legacy: 97.84,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 193.2612,
-                    max_priority_fee_per_gas: 3.9696000000000007
+                    max_priority_fee_per_gas: 3.9696000000000007,
+                    base_fee_per_gas: 94.647990462,
                 })
             }
         );
@@ -366,7 +371,8 @@ mod tests {
                 legacy: 96.90666666666667,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 192.1552,
-                    max_priority_fee_per_gas: 2.8552000000000004
+                    max_priority_fee_per_gas: 2.8552000000000004,
+                    base_fee_per_gas: 94.647990462,
                 })
             }
         );
@@ -377,7 +383,8 @@ mod tests {
                 legacy: 96.0,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 191.04,
-                    max_priority_fee_per_gas: 1.74
+                    max_priority_fee_per_gas: 1.74,
+                    base_fee_per_gas: 94.647990462,
                 })
             }
         );
