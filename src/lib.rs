@@ -8,6 +8,7 @@ pub mod eth_node;
 pub mod ethgasstation;
 pub mod gasnow;
 #[cfg(feature = "tokio_")]
+pub mod gas_price;
 pub mod gasnow_websocket;
 pub mod gnosis_safe;
 mod linear_interpolation;
@@ -16,6 +17,7 @@ pub mod priority;
 pub use ethgasstation::EthGasStation;
 pub use gasnow::GasNowGasStation;
 #[cfg(feature = "tokio_")]
+pub use gas_price::{GasPrice, GasPrice1559};
 pub use gasnow_websocket::GasNowWebSocketGasStation;
 pub use gnosis_safe::GnosisSafeGasStation;
 pub use priority::PriorityGasPriceEstimating;
@@ -26,56 +28,6 @@ use std::time::Duration;
 
 pub const DEFAULT_GAS_LIMIT: f64 = 21000.0;
 pub const DEFAULT_TIME_LIMIT: Duration = Duration::from_secs(30);
-
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
-pub struct GasPrice1559 {
-    base_fee_per_gas: f64,
-    max_fee_per_gas: f64,
-    max_priority_fee_per_gas: f64,
-}
-
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
-pub struct GasPrice {
-    legacy: f64,
-    eip1559: Option<GasPrice1559>,
-}
-
-impl GasPrice {
-    pub fn estimate_gas_price(&self) -> f64 {
-        if let Some(gas_price) = &self.eip1559 {
-            match gas_price
-                .max_fee_per_gas
-                .partial_cmp(&(gas_price.max_priority_fee_per_gas + gas_price.base_fee_per_gas))
-            {
-                Some(ordering) => match ordering {
-                    std::cmp::Ordering::Less | std::cmp::Ordering::Equal => {
-                        gas_price.max_fee_per_gas
-                    }
-                    std::cmp::Ordering::Greater => {
-                        gas_price.max_priority_fee_per_gas + gas_price.base_fee_per_gas
-                    }
-                },
-                None => gas_price.max_fee_per_gas,
-            }
-        } else {
-            self.legacy
-        }
-    }
-
-    pub fn bump(self, factor: f64) -> Self {
-        Self {
-            legacy: self.legacy * factor,
-            eip1559: match self.eip1559 {
-                Some(x) => Some(GasPrice1559 {
-                    base_fee_per_gas: x.base_fee_per_gas,
-                    max_fee_per_gas: x.max_fee_per_gas * factor,
-                    max_priority_fee_per_gas: x.max_priority_fee_per_gas,
-                }),
-                None => None,
-            },
-        }
-    }
-}
 
 #[cfg_attr(test, mockall::automock)]
 #[async_trait::async_trait]
