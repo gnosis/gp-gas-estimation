@@ -1,4 +1,4 @@
-use super::{linear_interpolation, GasPrice, GasPrice1559, GasPriceEstimating, Transport};
+use super::{linear_interpolation, EstimatedGasPrice, GasPrice1559, GasPriceEstimating, Transport};
 use anyhow::{anyhow, Context, Result};
 use serde::Deserialize;
 use std::{
@@ -137,7 +137,7 @@ impl GasPriceEstimating for BlockNative {
         &self,
         _gas_limit: f64,
         time_limit: Duration,
-    ) -> Result<GasPrice> {
+    ) -> Result<EstimatedGasPrice> {
         let cached_response = self.cached_response.lock().unwrap().clone();
 
         estimate_with_limits(time_limit, cached_response)
@@ -147,7 +147,7 @@ impl GasPriceEstimating for BlockNative {
 fn estimate_with_limits(
     time_limit: Duration,
     mut cached_response: CachedResponse,
-) -> Result<GasPrice> {
+) -> Result<EstimatedGasPrice> {
     if Instant::now().saturating_duration_since(cached_response.time) > CACHED_RESPONSE_VALIDITY {
         return Err(anyhow!("cached response is stale"));
     }
@@ -197,7 +197,7 @@ fn estimate_with_limits(
             )
             .collect::<Vec<(f64, f64)>>();
 
-        return Ok(GasPrice {
+        return Ok(EstimatedGasPrice {
             legacy: linear_interpolation::interpolate(
                 time_limit.as_secs_f64(),
                 gas_price_points.as_slice().try_into()?,
@@ -331,7 +331,7 @@ mod tests {
         let price = estimate_with_limits(Duration::from_secs(10), cached_response.clone()).unwrap();
         assert_eq!(
             price,
-            GasPrice {
+            EstimatedGasPrice {
                 legacy: 104.0,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 199.16,
@@ -343,7 +343,7 @@ mod tests {
         let price = estimate_with_limits(Duration::from_secs(16), cached_response.clone()).unwrap();
         assert_eq!(
             price,
-            GasPrice {
+            EstimatedGasPrice {
                 legacy: 98.76,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 194.134,
@@ -355,7 +355,7 @@ mod tests {
         let price = estimate_with_limits(Duration::from_secs(17), cached_response.clone()).unwrap();
         assert_eq!(
             price,
-            GasPrice {
+            EstimatedGasPrice {
                 legacy: 97.84,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 193.2612,
@@ -367,7 +367,7 @@ mod tests {
         let price = estimate_with_limits(Duration::from_secs(19), cached_response.clone()).unwrap();
         assert_eq!(
             price,
-            GasPrice {
+            EstimatedGasPrice {
                 legacy: 96.90666666666667,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 192.1552,
@@ -379,7 +379,7 @@ mod tests {
         let price = estimate_with_limits(Duration::from_secs(25), cached_response).unwrap();
         assert_eq!(
             price,
-            GasPrice {
+            EstimatedGasPrice {
                 legacy: 96.0,
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 191.04,

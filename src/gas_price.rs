@@ -3,33 +3,24 @@
 #[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd)]
 /// Main gas price structure.
 /// Provide estimated gas prices for both legacy and eip1559 transactions.
-pub struct GasPrice {
+pub struct EstimatedGasPrice {
     // Estimated gas price for legacy type of transactions.
     pub legacy: f64,
     // Estimated gas price for 1559 type of transactions. Optional because not all gas estimators support 1559.
     pub eip1559: Option<GasPrice1559>,
 }
 
-impl GasPrice {
+impl EstimatedGasPrice {
     // Estimate the gas price based on the current network conditions (base_fee_per_gas)
-    // Beware that gas price for mined transaction could be different (because base_fee_per_gas 
-    // can change between estimation and mining the tx).
-    pub fn estimate_gas_price(&self) -> f64 {
+    // Beware that gas price for mined transaction could be different from estimated value in case of 1559 tx
+    // (because base_fee_per_gas can change between estimation and mining the tx).
+    pub fn estimate(&self) -> f64 {
         if let Some(gas_price) = &self.eip1559 {
-            match gas_price
-                .max_fee_per_gas
-                .partial_cmp(&(gas_price.max_priority_fee_per_gas + gas_price.base_fee_per_gas))
-            {
-                Some(ordering) => match ordering {
-                    std::cmp::Ordering::Less | std::cmp::Ordering::Equal => {
-                        gas_price.max_fee_per_gas
-                    }
-                    std::cmp::Ordering::Greater => {
-                        gas_price.max_priority_fee_per_gas + gas_price.base_fee_per_gas
-                    }
-                },
-                None => gas_price.max_fee_per_gas,
-            }
+            std::cmp::min_by(
+                gas_price.max_fee_per_gas,
+                gas_price.max_priority_fee_per_gas + gas_price.base_fee_per_gas,
+                |a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal),
+            )
         } else {
             self.legacy
         }
@@ -69,7 +60,7 @@ impl GasPrice {
     }
 }
 
-/// Gas price structure for 1559 transactions. 
+/// Gas price structure for 1559 transactions.
 /// Contains base_fee_per_gas as an essential part of the gas price estimation.
 #[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd)]
 pub struct GasPrice1559 {

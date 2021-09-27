@@ -17,7 +17,7 @@ pub mod priority;
 pub use ethgasstation::EthGasStation;
 pub use gasnow::GasNowGasStation;
 #[cfg(feature = "tokio_")]
-pub use gas_price::{GasPrice, GasPrice1559};
+pub use gas_price::{EstimatedGasPrice, GasPrice1559};
 pub use gasnow_websocket::GasNowWebSocketGasStation;
 pub use gnosis_safe::GnosisSafeGasStation;
 pub use priority::PriorityGasPriceEstimating;
@@ -33,12 +33,16 @@ pub const DEFAULT_TIME_LIMIT: Duration = Duration::from_secs(30);
 #[async_trait::async_trait]
 pub trait GasPriceEstimating: Send + Sync {
     /// Estimate the gas price for a transaction to be mined "quickly".
-    async fn estimate(&self) -> Result<GasPrice> {
+    async fn estimate(&self) -> Result<EstimatedGasPrice> {
         self.estimate_with_limits(DEFAULT_GAS_LIMIT, DEFAULT_TIME_LIMIT)
             .await
     }
     /// Estimate the gas price for a transaction that uses <gas> to be mined within <time_limit>.
-    async fn estimate_with_limits(&self, gas_limit: f64, time_limit: Duration) -> Result<GasPrice>;
+    async fn estimate_with_limits(
+        &self,
+        gas_limit: f64,
+        time_limit: Duration,
+    ) -> Result<EstimatedGasPrice>;
 }
 
 #[async_trait::async_trait]
