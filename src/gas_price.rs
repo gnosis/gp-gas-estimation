@@ -76,27 +76,24 @@ impl GasPrice1559 {
     // Bump maximum gas price by factor.
     pub fn bump_cap(self, factor: f64) -> Self {
         Self {
-            base_fee_per_gas: self.base_fee_per_gas,
             max_fee_per_gas: self.max_fee_per_gas * factor,
-            max_priority_fee_per_gas: self.max_priority_fee_per_gas,
+            ..self
         }
     }
 
     // Ceil maximum gas price (since its defined as float).
     pub fn ceil_cap(self) -> Self {
         Self {
-            base_fee_per_gas: self.base_fee_per_gas,
             max_fee_per_gas: self.max_fee_per_gas.ceil(),
-            max_priority_fee_per_gas: self.max_priority_fee_per_gas,
+            ..self
         }
     }
 
     // If current cap if higher then the input, set to input.
     pub fn limit_cap(self, cap: f64) -> Self {
         Self {
-            base_fee_per_gas: self.base_fee_per_gas,
             max_fee_per_gas: self.max_fee_per_gas.min(cap),
-            max_priority_fee_per_gas: self.max_priority_fee_per_gas,
+            ..self
         }
     }
 }
