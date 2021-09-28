@@ -279,14 +279,14 @@ mod tests {
           "system": "ethereum",
           "network": "main",
           "unit": "gwei",
-          "maxPrice": "123",
-          "currentBlockNumber": "13005095",
-          "msSinceLastBlock": "3793",
+          "maxPrice": 123,
+          "currentBlockNumber": 13005095,
+          "msSinceLastBlock": 3793,
           "blockPrices": [
             {
-              "blockNumber": "13005096",
+              "blockNumber": 13005096,
               "baseFeePerGas": 94.647990462,
-              "estimatedTransactionCount": "137",
+              "estimatedTransactionCount": 137,
               "estimatedPrices": [
                 {
                   "confidence": 99,
