@@ -35,19 +35,19 @@ impl EstimatedGasPrice {
         }
     }
 
-    // Bump maximum gas price by factor.
-    pub fn bump_cap(self, factor: f64) -> Self {
+    // Bump gas price by factor.
+    pub fn bump(self, factor: f64) -> Self {
         Self {
             legacy: self.legacy * factor,
-            eip1559: self.eip1559.and_then(|x| Some(x.bump_cap(factor))),
+            eip1559: self.eip1559.and_then(|x| Some(x.bump(factor))),
         }
     }
 
-    // Ceil maximum gas price (since its defined as float).
-    pub fn ceil_cap(self) -> Self {
+    // Ceil gas price (since its defined as float).
+    pub fn ceil(self) -> Self {
         Self {
             legacy: self.legacy.ceil(),
-            eip1559: self.eip1559.and_then(|x| Some(x.ceil_cap())),
+            eip1559: self.eip1559.and_then(|x| Some(x.ceil())),
         }
     }
 
@@ -73,18 +73,20 @@ pub struct GasPrice1559 {
 }
 
 impl GasPrice1559 {
-    // Bump maximum gas price by factor.
-    pub fn bump_cap(self, factor: f64) -> Self {
+    // Bump gas price by factor.
+    pub fn bump(self, factor: f64) -> Self {
         Self {
             max_fee_per_gas: self.max_fee_per_gas * factor,
+            max_priority_fee_per_gas: self.max_priority_fee_per_gas * factor,
             ..self
         }
     }
 
-    // Ceil maximum gas price (since its defined as float).
-    pub fn ceil_cap(self) -> Self {
+    // Ceil gas price (since its defined as float).
+    pub fn ceil(self) -> Self {
         Self {
             max_fee_per_gas: self.max_fee_per_gas.ceil(),
+            max_priority_fee_per_gas: self.max_priority_fee_per_gas.ceil(),
             ..self
         }
     }
@@ -93,6 +95,9 @@ impl GasPrice1559 {
     pub fn limit_cap(self, cap: f64) -> Self {
         Self {
             max_fee_per_gas: self.max_fee_per_gas.min(cap),
+            max_priority_fee_per_gas: self
+                .max_priority_fee_per_gas
+                .min(self.max_fee_per_gas.min(cap)), // enforce max_priority_fee_per_gas <= max_fee_per_gas
             ..self
         }
     }
