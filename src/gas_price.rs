@@ -39,7 +39,7 @@ impl EstimatedGasPrice {
     pub fn bump(self, factor: f64) -> Self {
         Self {
             legacy: self.legacy * factor,
-            eip1559: self.eip1559.and_then(|x| Some(x.bump(factor))),
+            eip1559: self.eip1559.map(|x| x.bump(factor)),
         }
     }
 
@@ -47,7 +47,7 @@ impl EstimatedGasPrice {
     pub fn ceil(self) -> Self {
         Self {
             legacy: self.legacy.ceil(),
-            eip1559: self.eip1559.and_then(|x| Some(x.ceil())),
+            eip1559: self.eip1559.map(|x| x.ceil()),
         }
     }
 
@@ -55,7 +55,7 @@ impl EstimatedGasPrice {
     pub fn limit_cap(self, cap: f64) -> Self {
         Self {
             legacy: self.legacy.min(cap),
-            eip1559: self.eip1559.and_then(|x| Some(x.limit_cap(cap))),
+            eip1559: self.eip1559.map(|x| x.limit_cap(cap)),
         }
     }
 }
@@ -106,11 +106,12 @@ impl GasPrice1559 {
 #[cfg(test)]
 mod tests {
     use crate::{EstimatedGasPrice, GasPrice1559};
+    use assert_approx_eq::assert_approx_eq;
 
     #[test]
     fn cap_legacy() {
         //assert legacy is returned
-        assert_eq!(
+        assert_approx_eq!(
             EstimatedGasPrice {
                 legacy: 1.0,
                 ..Default::default()
@@ -123,7 +124,7 @@ mod tests {
     #[test]
     fn cap_eip1559() {
         //assert eip1559 is returned
-        assert_eq!(
+        assert_approx_eq!(
             EstimatedGasPrice {
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 1.0,
@@ -139,7 +140,7 @@ mod tests {
     #[test]
     fn cap_legacy_and_eip1559() {
         //assert eip1559 is taken as default
-        assert_eq!(
+        assert_approx_eq!(
             EstimatedGasPrice {
                 legacy: 1.0,
                 eip1559: Some(GasPrice1559 {
@@ -234,7 +235,7 @@ mod tests {
     #[test]
     fn estimate_legacy() {
         //assert legacy estimation is returned
-        assert_eq!(
+        assert_approx_eq!(
             EstimatedGasPrice {
                 legacy: 1.0,
                 ..Default::default()
@@ -247,7 +248,7 @@ mod tests {
     #[test]
     fn estimate_eip1559() {
         //assert eip1559 estimation is returned
-        assert_eq!(
+        assert_approx_eq!(
             EstimatedGasPrice {
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 10.0,
@@ -260,7 +261,7 @@ mod tests {
             7.0
         );
 
-        assert_eq!(
+        assert_approx_eq!(
             EstimatedGasPrice {
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 10.0,
@@ -273,7 +274,7 @@ mod tests {
             10.0
         );
 
-        assert_eq!(
+        assert_approx_eq!(
             EstimatedGasPrice {
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 10.0,
@@ -289,7 +290,7 @@ mod tests {
 
     #[test]
     fn estimate_legacy_and_eip1559() {
-        assert_eq!(
+        assert_approx_eq!(
             EstimatedGasPrice {
                 eip1559: Some(GasPrice1559 {
                     max_fee_per_gas: 10.0,

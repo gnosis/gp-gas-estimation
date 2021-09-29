@@ -176,7 +176,7 @@ fn estimate_with_limits(
             .iter()
             .map(
                 |(duration, gas_price, _max_fee_per_gas, _max_priority_fee_per_gas)| {
-                    (duration.clone(), gas_price.clone())
+                    (*duration, *gas_price)
                 },
             )
             .collect::<Vec<(f64, f64)>>();
@@ -184,7 +184,7 @@ fn estimate_with_limits(
             .iter()
             .map(
                 |(duration, _gas_price, max_fee_per_gas, _max_priority_fee_per_gas)| {
-                    (duration.clone(), max_fee_per_gas.clone())
+                    (*duration, *max_fee_per_gas)
                 },
             )
             .collect::<Vec<(f64, f64)>>();
@@ -192,7 +192,7 @@ fn estimate_with_limits(
             .iter()
             .map(
                 |(duration, _gas_price, _max_fee_per_gas, max_priority_fee_per_gas)| {
-                    (duration.clone(), max_priority_fee_per_gas.clone())
+                    (*duration, *max_priority_fee_per_gas)
                 },
             )
             .collect::<Vec<(f64, f64)>>();
