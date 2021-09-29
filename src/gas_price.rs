@@ -105,5 +105,201 @@ impl GasPrice1559 {
 
 #[cfg(test)]
 mod tests {
-    // todo
+    use crate::{EstimatedGasPrice, GasPrice1559};
+
+    #[test]
+    fn cap_legacy() {
+        //assert legacy is returned
+        assert_eq!(
+            EstimatedGasPrice {
+                legacy: 1.0,
+                ..Default::default()
+            }
+            .cap(),
+            1.0
+        );
+    }
+
+    #[test]
+    fn cap_eip1559() {
+        //assert eip1559 is returned
+        assert_eq!(
+            EstimatedGasPrice {
+                eip1559: Some(GasPrice1559 {
+                    max_fee_per_gas: 1.0,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }
+            .cap(),
+            1.0
+        );
+    }
+
+    #[test]
+    fn cap_legacy_and_eip1559() {
+        //assert eip1559 is taken as default
+        assert_eq!(
+            EstimatedGasPrice {
+                legacy: 1.0,
+                eip1559: Some(GasPrice1559 {
+                    max_fee_per_gas: 2.0,
+                    ..Default::default()
+                }),
+            }
+            .cap(),
+            2.0
+        );
+    }
+
+    #[test]
+    fn bump_and_ceil() {
+        let gas_price = EstimatedGasPrice {
+            legacy: 1.0,
+            eip1559: Some(GasPrice1559 {
+                max_fee_per_gas: 2.0,
+                max_priority_fee_per_gas: 3.0,
+                ..Default::default()
+            }),
+        };
+
+        let gas_price_bumped = EstimatedGasPrice {
+            legacy: 1.125,
+            eip1559: Some(GasPrice1559 {
+                max_fee_per_gas: 2.25,
+                max_priority_fee_per_gas: 3.375,
+                ..Default::default()
+            }),
+        };
+
+        let gas_price_bumped_and_ceiled = EstimatedGasPrice {
+            legacy: 2.0,
+            eip1559: Some(GasPrice1559 {
+                max_fee_per_gas: 3.0,
+                max_priority_fee_per_gas: 4.0,
+                ..Default::default()
+            }),
+        };
+
+        assert_eq!(gas_price.bump(1.125), gas_price_bumped);
+        assert_eq!(gas_price.bump(1.125).ceil(), gas_price_bumped_and_ceiled);
+    }
+
+    #[test]
+    fn limit_cap_only_max_fee_capped() {
+        let gas_price = EstimatedGasPrice {
+            legacy: 10.0,
+            eip1559: Some(GasPrice1559 {
+                max_fee_per_gas: 5.0,
+                max_priority_fee_per_gas: 3.0,
+                ..Default::default()
+            }),
+        };
+
+        let gas_price_capped = EstimatedGasPrice {
+            legacy: 4.0,
+            eip1559: Some(GasPrice1559 {
+                max_fee_per_gas: 4.0,
+                max_priority_fee_per_gas: 3.0,
+                ..Default::default()
+            }),
+        };
+
+        assert_eq!(gas_price.limit_cap(4.0), gas_price_capped);
+    }
+
+    #[test]
+    fn limit_cap_max_fee_and_max_priority_capped() {
+        let gas_price = EstimatedGasPrice {
+            legacy: 10.0,
+            eip1559: Some(GasPrice1559 {
+                max_fee_per_gas: 5.0,
+                max_priority_fee_per_gas: 3.0,
+                ..Default::default()
+            }),
+        };
+
+        let gas_price_capped = EstimatedGasPrice {
+            legacy: 2.0,
+            eip1559: Some(GasPrice1559 {
+                max_fee_per_gas: 2.0,
+                max_priority_fee_per_gas: 2.0,
+                ..Default::default()
+            }),
+        };
+
+        assert_eq!(gas_price.limit_cap(2.0), gas_price_capped);
+    }
+
+    #[test]
+    fn estimate_legacy() {
+        //assert legacy estimation is returned
+        assert_eq!(
+            EstimatedGasPrice {
+                legacy: 1.0,
+                ..Default::default()
+            }
+            .estimate(),
+            1.0
+        );
+    }
+
+    #[test]
+    fn estimate_eip1559() {
+        //assert eip1559 estimation is returned
+        assert_eq!(
+            EstimatedGasPrice {
+                eip1559: Some(GasPrice1559 {
+                    max_fee_per_gas: 10.0,
+                    max_priority_fee_per_gas: 5.0,
+                    base_fee_per_gas: 2.0
+                }),
+                ..Default::default()
+            }
+            .estimate(),
+            7.0
+        );
+
+        assert_eq!(
+            EstimatedGasPrice {
+                eip1559: Some(GasPrice1559 {
+                    max_fee_per_gas: 10.0,
+                    max_priority_fee_per_gas: 8.0,
+                    base_fee_per_gas: 2.0
+                }),
+                ..Default::default()
+            }
+            .estimate(),
+            10.0
+        );
+
+        assert_eq!(
+            EstimatedGasPrice {
+                eip1559: Some(GasPrice1559 {
+                    max_fee_per_gas: 10.0,
+                    max_priority_fee_per_gas: 10.0,
+                    base_fee_per_gas: 2.0
+                }),
+                ..Default::default()
+            }
+            .estimate(),
+            10.0
+        );
+    }
+
+    #[test]
+    fn estimate_legacy_and_eip1559() {
+        assert_eq!(
+            EstimatedGasPrice {
+                eip1559: Some(GasPrice1559 {
+                    max_fee_per_gas: 10.0,
+                    max_priority_fee_per_gas: 5.0,
+                    base_fee_per_gas: 2.0
+                }),
+                legacy: 8.0
+            }
+            .estimate(),
+            7.0
+        );
+    }
 }
