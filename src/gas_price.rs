@@ -11,10 +11,10 @@ pub struct EstimatedGasPrice {
 }
 
 impl EstimatedGasPrice {
-    // Estimate the gas price based on the current network conditions (base_fee_per_gas)
+    // Estimate the effective gas price based on the current network conditions (base_fee_per_gas)
     // Beware that gas price for mined transaction could be different from estimated value in case of 1559 tx
     // (because base_fee_per_gas can change between estimation and mining the tx).
-    pub fn estimate(&self) -> f64 {
+    pub fn effective_gas_price(&self) -> f64 {
         if let Some(gas_price) = &self.eip1559 {
             std::cmp::min_by(
                 gas_price.max_fee_per_gas,
@@ -240,7 +240,7 @@ mod tests {
                 legacy: 1.0,
                 ..Default::default()
             }
-            .estimate(),
+            .effective_gas_price(),
             1.0
         );
     }
@@ -257,7 +257,7 @@ mod tests {
                 }),
                 ..Default::default()
             }
-            .estimate(),
+            .effective_gas_price(),
             7.0
         );
 
@@ -270,7 +270,7 @@ mod tests {
                 }),
                 ..Default::default()
             }
-            .estimate(),
+            .effective_gas_price(),
             10.0
         );
 
@@ -283,7 +283,7 @@ mod tests {
                 }),
                 ..Default::default()
             }
-            .estimate(),
+            .effective_gas_price(),
             10.0
         );
     }
@@ -299,7 +299,7 @@ mod tests {
                 }),
                 legacy: 8.0
             }
-            .estimate(),
+            .effective_gas_price(),
             7.0
         );
     }
