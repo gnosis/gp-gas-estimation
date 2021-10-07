@@ -26,7 +26,7 @@ struct EstimatedPrice {
 }
 
 impl EstimatedPrice {
-    pub fn to_wei(self) -> Self {
+    pub fn gwei_to_wei(self) -> Self {
         Self {
             price: self.price * 1_000_000_000.0,
             max_fee_per_gas: self.max_fee_per_gas * 1_000_000_000.0,
@@ -44,13 +44,13 @@ struct BlockPrice {
 }
 
 impl BlockPrice {
-    pub fn to_wei(self) -> Self {
+    pub fn gwei_to_wei(self) -> Self {
         Self {
             base_fee_per_gas: self.base_fee_per_gas * 1_000_000_000.0,
             estimated_prices: self
                 .estimated_prices
                 .into_iter()
-                .map(|price| price.to_wei())
+                .map(|price| price.gwei_to_wei())
                 .collect(),
         }
     }
@@ -63,12 +63,12 @@ struct Response {
 }
 
 impl Response {
-    pub fn to_wei(self) -> Self {
+    pub fn gwei_to_wei(self) -> Self {
         Self {
             block_prices: self
                 .block_prices
                 .into_iter()
-                .map(|block| block.to_wei())
+                .map(|block| block.gwei_to_wei())
                 .collect(),
         }
     }
@@ -133,7 +133,7 @@ impl BlockNative {
             Ok(response) => {
                 *cached_response_clone.lock().unwrap() = CachedResponse {
                     time: Instant::now(),
-                    data: response.to_wei(),
+                    data: response.gwei_to_wei(),
                 };
             }
             Err(e) => {
@@ -150,7 +150,7 @@ impl BlockNative {
                     Ok(response) => {
                         *cached_response_clone.lock().unwrap() = CachedResponse {
                             time: Instant::now(),
-                            data: response.to_wei(),
+                            data: response.gwei_to_wei(),
                         };
                     }
                     Err(e) => tracing::warn!(?e, "failed to get response from blocknative"),
