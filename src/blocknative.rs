@@ -25,6 +25,17 @@ struct EstimatedPrice {
     max_fee_per_gas: f64,
 }
 
+impl EstimatedPrice {
+    pub fn to_wei(self) -> Self {
+        Self {
+            price: self.price * 1_000_000_000.0,
+            max_fee_per_gas: self.max_fee_per_gas * 1_000_000_000.0,
+            max_priority_fee_per_gas: self.max_priority_fee_per_gas * 1_000_000_000.0,
+            ..self
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 struct BlockPrice {
@@ -32,10 +43,35 @@ struct BlockPrice {
     base_fee_per_gas: f64,
 }
 
+impl BlockPrice {
+    pub fn to_wei(self) -> Self {
+        Self {
+            base_fee_per_gas: self.base_fee_per_gas * 1_000_000_000.0,
+            estimated_prices: self
+                .estimated_prices
+                .into_iter()
+                .map(|price| price.to_wei())
+                .collect(),
+        }
+    }
+}
+
 #[derive(Debug, serde::Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 struct Response {
     block_prices: Vec<BlockPrice>,
+}
+
+impl Response {
+    pub fn to_wei(self) -> Self {
+        Self {
+            block_prices: self
+                .block_prices
+                .into_iter()
+                .map(|block| block.to_wei())
+                .collect(),
+        }
+    }
 }
 
 /// Used for rate limit implementation. If requests are received at a higher rate then Gas price estimators
@@ -95,10 +131,9 @@ impl BlockNative {
         let request = Request { transport, header };
         match request.gas_price().await {
             Ok(response) => {
-                let mut data = cached_response_clone.lock().unwrap();
-                *data = CachedResponse {
+                *cached_response_clone.lock().unwrap() = CachedResponse {
                     time: Instant::now(),
-                    data: response,
+                    data: response.to_wei(),
                 };
             }
             Err(e) => {
@@ -113,10 +148,9 @@ impl BlockNative {
                 tokio::time::sleep(RATE_LIMIT).await;
                 match request.gas_price().await {
                     Ok(response) => {
-                        let mut data = cached_response_clone.lock().unwrap();
-                        *data = CachedResponse {
+                        *cached_response_clone.lock().unwrap() = CachedResponse {
                             time: Instant::now(),
-                            data: response,
+                            data: response.to_wei(),
                         };
                     }
                     Err(e) => tracing::warn!(?e, "failed to get response from blocknative"),
