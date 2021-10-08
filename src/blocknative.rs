@@ -26,7 +26,7 @@ struct EstimatedPrice {
 }
 
 impl EstimatedPrice {
-    pub fn gwei_to_wei(self) -> Self {
+    fn gwei_to_wei(self) -> Self {
         Self {
             price: self.price * 1_000_000_000.0,
             max_fee_per_gas: self.max_fee_per_gas * 1_000_000_000.0,
@@ -44,7 +44,7 @@ struct BlockPrice {
 }
 
 impl BlockPrice {
-    pub fn gwei_to_wei(self) -> Self {
+    fn gwei_to_wei(self) -> Self {
         Self {
             base_fee_per_gas: self.base_fee_per_gas * 1_000_000_000.0,
             estimated_prices: self
@@ -63,7 +63,7 @@ struct Response {
 }
 
 impl Response {
-    pub fn gwei_to_wei(self) -> Self {
+    fn gwei_to_wei(self) -> Self {
         Self {
             block_prices: self
                 .block_prices
