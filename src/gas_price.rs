@@ -35,6 +35,15 @@ impl EstimatedGasPrice {
         }
     }
 
+    // Maximum tip willing to pay to miners for transaction.
+    pub fn tip(&self) -> f64 {
+        if let Some(gas_price) = &self.eip1559 {
+            gas_price.max_priority_fee_per_gas
+        } else {
+            self.legacy
+        }
+    }
+
     // Bump gas price by factor.
     pub fn bump(self, factor: f64) -> Self {
         Self {
