@@ -207,8 +207,13 @@ async fn suggest_fee<T: Transport + Send + Sync>(
         return Err(anyhow!("invalid oldest block"));
     };
 
-    let rewards =
-        collect_rewards(transport, oldest_block, fee_history.gas_used_ratio, params).await?;
+    let rewards = collect_rewards(
+        transport,
+        oldest_block,
+        fee_history.gas_used_ratio.clone(),
+        params,
+    )
+    .await?;
     let mut result = vec![];
     let mut max_base_fee = 0.0;
     let mut time_factor = params.max_time_factor;
@@ -246,6 +251,15 @@ async fn suggest_fee<T: Transport + Send + Sync>(
         time_factor /= 2.0;
     }
     result.reverse();
+
+    if result
+        .iter()
+        .any(|(_, gas_price)| gas_price.cap() < gas_price.base_fee())
+    {
+        tracing::info!("invalid gas price: {:?}", result);
+        tracing::info!("feeHistory: {:?}", fee_history);
+    }
+
     Ok(result)
 }
 
