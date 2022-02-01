@@ -252,10 +252,7 @@ async fn suggest_fee<T: Transport + Send + Sync>(
     }
     result.reverse();
 
-    if result
-        .iter()
-        .any(|(_, gas_price)| gas_price.cap() < gas_price.base_fee())
-    {
+    if result.iter().any(|(_, gas_price)| !gas_price.is_valid()) {
         tracing::info!("invalid gas price: {:?}", result);
         tracing::info!("feeHistory: {:?}", fee_history);
     }
